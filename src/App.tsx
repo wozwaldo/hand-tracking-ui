@@ -1,7 +1,7 @@
-import HandCrumple from "./components/HandCrumple";
+import CrumpleHero from "./components/CrumpleHero";
 
 function App() {
-  return <HandCrumple />
+  return <CrumpleHero />
 }
 
 export default App

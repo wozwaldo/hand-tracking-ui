@@ -83,7 +83,7 @@ const HandCrumple = () => {
                         }
 
                         // draw circle
-                        ctx.fillStyle = "#00ff88";
+                        ctx.fillStyle = "#ffffff";
                         for (const p of points){
                             ctx.beginPath();
                             ctx.arc((1 - p.x) * w, p.y * h, 4, 0, Math.PI * 2);
@@ -92,9 +92,10 @@ const HandCrumple = () => {
 
                         const score = getFistScore(points);
                         smoothedScore = smoothedScore + (score - smoothedScore) * SMOOTHING;
-                        ctx.font = "20px monospace";
+                        // canvas is 480×360 drawn into 340×240 (≈0.71×): 20px here ≈ 14px on screen
+                        ctx.font = "bold 20px 'IBM Plex Mono', monospace";
                         ctx.fillStyle = "#ffffff";
-                        ctx.fillText(smoothedScore.toFixed(2), 10, 30);
+                        ctx.fillText(smoothedScore.toFixed(2), 14, 38);
 
                         const video = crumpleVideoRef.current;
                         if (video && Number.isFinite(video.duration)) {
@@ -114,29 +115,28 @@ const HandCrumple = () => {
     }, []);
 
     return (
-        <div style={{ display: "flex"}}>
-            <div style={{ position: "relative", width: 480 }}>
+        // display:contents — .hc-cam and .hc-stage become grid items of the surrounding CrumpleHero layout
+        <div className="hc" style={{ display: "contents" }}>
+            <div className="hc-cam">
                 <video
                     ref={camRef}
                     autoPlay
                     muted
                     playsInline
-                    style={{ width: "100%", transform: "scaleX(-1)" }}
                 />
                 <canvas 
                     ref={canvasRef} 
                     width={480}
                     height={360}
-                    style={{ position: "absolute", top: 0, left: 0 }}
                 />
             </div>
             <video
+                className="hc-stage"
                 ref={crumpleVideoRef}
                 src="/videos/crumple-scrub.mp4"
                 muted
                 playsInline
                 preload="auto"
-                style={{ width: 480, height: "auto", flexShrink: 0 }}
             />
         </div>
        

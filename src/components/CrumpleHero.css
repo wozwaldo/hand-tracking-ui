@@ -1,0 +1,242 @@
+/* ------------------------------------------------------------------ */
+/* Crumple Hero — 1440×900 reference layout, expressed as a CSS grid   */
+/*                                                                     */
+/* rows:  48 | link 14 | gap | title 176 | gap | note 92 | gap | cam 240 */
+/* cols:  72 | 637 (rail) | 1fr                                        */
+/* Scene is locked to 100svh (no page scroll); the gap rows compress   */
+/* on shorter viewports. The stage (crumple video) is absolutely       */
+/* pinned top-right at 100% height, 1:1 (in-flow only on mobile).      */
+/* ------------------------------------------------------------------ */
+
+.hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--page-margin) 637px minmax(0, 1fr);
+  /* fixed content rows (14/176/92) so wrapping never shifts the rhythm; gap rows shrink to fit */
+  grid-template-rows:
+    var(--top-link) 14px minmax(32px, 59px) 176px minmax(24px, 40px) 92px minmax(24px, 48px)
+    var(--cam-h) minmax(16px, 1fr);
+  height: 100svh;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  font-family: var(--font-base);
+}
+
+/* --- Stage: crumple <video> (from HandCrumple) --- */
+.hc-stage {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 24%);
+  mask-image: linear-gradient(to right, transparent 0%, black 24%);
+  pointer-events: none;
+  user-select: none;
+}
+.hc-stage { z-index: 1; }
+
+/* --- Rail --- */
+.hero__link {
+  grid-column: 2;
+  grid-row: 2;
+  z-index: 2;
+  justify-self: start;
+  align-self: start;
+  font: 11px/14px var(--font-mono);
+  letter-spacing: 3px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  white-space: nowrap;
+  position: relative;
+}
+.hero__link:hover { color: var(--accent); }
+
+.hero__title {
+  grid-column: 2;
+  grid-row: 4;
+  z-index: 2;
+  margin: 0 0 0 -1px; /* spec: left 71 vs 72 rail */
+  width: 637px;
+  max-width: 100%;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 80px;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  color: var(--text-primary);
+}
+
+.hero__note {
+  grid-column: 2;
+  grid-row: 6;
+  z-index: 2;
+  margin: 0 0 0 4px; /* spec: left 76 */
+  width: 420px;
+  max-width: 100%;
+  font: 11.5px/2 var(--font-mono);
+  color: var(--text-muted);
+}
+.hero__readme {
+  position: relative;
+  color: var(--accent);
+  text-decoration: none;
+}
+.hero__readme:hover { color: var(--accent-hover); }
+
+/* invisible 44px+ hit targets on both links, without moving the text */
+.hero__link::after,
+.hero__readme::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -16px;
+  bottom: -16px;
+}
+
+/* --- Webcam module: chrome (.cam-frame) stacked on HandCrumple's .hc-cam --- */
+.cam-frame,
+.hc-cam {
+  grid-column: 2;
+  grid-row: 8;
+  justify-self: start;
+  align-self: start;
+  width: var(--cam-w);
+  height: var(--cam-h);
+  max-width: 100%;
+}
+
+.hc-cam {
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+  background: var(--cam-bg);
+}
+/* video + canvas share one box with identical object-fit so the overlay stays aligned */
+.hc-cam video,
+.hc-cam canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.hc-cam video { transform: scaleX(-1); }
+
+.cam-frame {
+  position: relative;
+  z-index: 3;
+  pointer-events: none;
+  border: 1px solid var(--hairline);
+  background-image:
+    repeating-linear-gradient(0deg, var(--grid-line) 0 1px, transparent 1px 20px),
+    repeating-linear-gradient(90deg, var(--grid-line) 0 1px, transparent 1px 20px);
+}
+.cam-frame__cross {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: var(--crosshair);
+  transform: translate(-50%, -50%);
+}
+.cam-frame__cross--h { width: 30px; height: 1px; }
+.cam-frame__cross--v { width: 1px; height: 30px; }
+
+.cam-frame__label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  text-align: center;
+  font: 10px var(--font-mono);
+  letter-spacing: 2px;
+  color: var(--accent);
+}
+
+/* live: grid + crosshair hide (label is not rendered); border stays */
+.hero[data-camera="live"] .cam-frame { background-image: none; }
+.hero[data-camera="live"] .cam-frame__cross { display: none; }
+
+/* ------------------------------------------------------------------ */
+/* Tablet ~768–1200: rail hugs left, title scales, image crops from left */
+/* ------------------------------------------------------------------ */
+@media (max-width: 1199px) {
+  .hero {
+    grid-template-columns: var(--page-margin) minmax(0, 637px) minmax(0, 1fr);
+    grid-template-rows:
+      var(--top-link) auto minmax(24px, 48px) auto minmax(20px, 32px) auto minmax(20px, 40px)
+      var(--cam-h) minmax(16px, 1fr);
+  }
+  .hero__title {
+    width: auto;
+    font-size: clamp(56px, 6vw, 64px);
+  }
+  /* pin the stage's left edge just past the rail; the square image then crops from its left */
+  .hc-stage {
+    left: calc(var(--page-margin) + var(--cam-w) + 24px);
+    width: auto;
+    aspect-ratio: auto;
+    object-position: right center; /* subject sits center-right */
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Mobile < 768: stack — link, title, image, note, cam                 */
+/* ------------------------------------------------------------------ */
+@media (max-width: 767px) {
+  .hero {
+    grid-template-columns: 20px minmax(0, 1fr) 20px;
+    grid-template-rows: auto auto auto auto auto;
+    grid-template-areas:
+      ". link ."
+      ". title ."
+      "stage stage stage"
+      ". note ."
+      ". cam .";
+    height: auto;
+    min-height: 100svh;
+    padding: 24px 0 40px;
+    overflow: visible;
+  }
+  .hero__link  { grid-area: link; }
+  .hero__title {
+    grid-area: title;
+    margin: 24px 0 0 -1px;
+    font-size: clamp(40px, 11vw, 56px);
+  }
+  .hc-stage {
+    position: static;
+    left: auto;
+    grid-area: stage;
+    justify-self: stretch;
+    width: 100%;
+    max-width: none;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    margin-top: 24px;
+    object-position: center;
+    -webkit-mask-image: linear-gradient(to top, transparent 0%, black 24%);
+    mask-image: linear-gradient(to top, transparent 0%, black 24%);
+  }
+  .hero__note {
+    grid-area: note;
+    margin: 8px 0 0 4px;
+    width: auto;
+  }
+  .cam-frame,
+  .hc-cam {
+    grid-area: cam;
+    margin-top: 28px;
+    width: min(100%, var(--cam-w));
+    height: auto;
+    aspect-ratio: 17 / 12; /* 340×240 */
+  }
+}
