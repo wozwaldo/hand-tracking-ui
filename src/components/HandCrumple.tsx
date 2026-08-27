@@ -4,6 +4,7 @@ import { HandLandmarker, FilesetResolver, type NormalizedLandmark } from "@media
 const HandCrumple = () => {
     const camRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const crumpleVideoRef = useRef<HTMLVideoElement>(null);
 
     useEffect(() => {
 
@@ -11,8 +12,11 @@ const HandCrumple = () => {
         let rafId = 0;
         let ctx: CanvasRenderingContext2D | null = null;
 
-        const OPEN_RATIO = 2.0;
-        const FIST_RATIO = 0.5;
+        const OPEN_RATIO = 0.87;
+        const FIST_RATIO = 0.28;
+
+        const SMOOTHING = 0.2;
+        let smoothedScore = 0;
 
         async function init () {
             if (!camRef.current || !canvasRef.current) return;
@@ -73,8 +77,8 @@ const HandCrumple = () => {
                             const a = points[conn.start]; // start point
                             const b = points[conn.end]; // end point
                             ctx.beginPath();
-                            ctx.moveTo(a.x * w, a.y * h);
-                            ctx.lineTo(b.x * w, b.y * h);
+                            ctx.moveTo((1 - a.x)* w, a.y * h);
+                            ctx.lineTo((1 - b.x) * w, b.y * h);
                             ctx.stroke();
                         }
 
@@ -82,14 +86,20 @@ const HandCrumple = () => {
                         ctx.fillStyle = "#00ff88";
                         for (const p of points){
                             ctx.beginPath();
-                            ctx.arc(p.x * w, p.y * h, 4, 0, Math.PI * 2);
+                            ctx.arc((1 - p.x) * w, p.y * h, 4, 0, Math.PI * 2);
                             ctx.fill();
                         }
 
                         const score = getFistScore(points);
+                        smoothedScore = smoothedScore + (score - smoothedScore) * SMOOTHING;
                         ctx.font = "20px monospace";
                         ctx.fillStyle = "#ffffff";
-                        ctx.fillText(score.toFixed(2), 10, 30);
+                        ctx.fillText(smoothedScore.toFixed(2), 10, 30);
+
+                        const video = crumpleVideoRef.current;
+                        if (video && Number.isFinite(video.duration)) {
+                            video.currentTime = smoothedScore * video.duration;
+                        }
                     }
                 }
                 rafId = requestAnimationFrame(loop);
@@ -104,19 +114,29 @@ const HandCrumple = () => {
     }, []);
 
     return (
-        <div style={{ position: "relative", width: 480 }}>
-             <video
-                ref={camRef}
-                autoPlay
+        <div style={{ display: "flex"}}>
+            <div style={{ position: "relative", width: 480 }}>
+                <video
+                    ref={camRef}
+                    autoPlay
+                    muted
+                    playsInline
+                    style={{ width: "100%", transform: "scaleX(-1)" }}
+                />
+                <canvas 
+                    ref={canvasRef} 
+                    width={480}
+                    height={360}
+                    style={{ position: "absolute", top: 0, left: 0 }}
+                />
+            </div>
+            <video
+                ref={crumpleVideoRef}
+                src="/videos/crumple-scrub.mp4"
                 muted
                 playsInline
-                style={{ width: "100%" }}
-            />
-            <canvas 
-                ref={canvasRef} 
-                width={480}
-                height={360}
-                style={{ position: "absolute", top: 0, left: 0 }}
+                preload="auto"
+                style={{ width: 480, height: "auto", flexShrink: 0 }}
             />
         </div>
        
