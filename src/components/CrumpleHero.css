@@ -189,54 +189,63 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* Mobile < 768: stack — link, title, image, note, cam                 */
+/* Mobile < 768: one screen, no scroll — link, title, stage, note, cam  */
+/* The stage (crumple video) takes whatever height is left over and    */
+/* crops to a horizontal band; the cam module shrinks on short phones. */
 /* ------------------------------------------------------------------ */
 @media (max-width: 767px) {
   .hero {
     grid-template-columns: 20px minmax(0, 1fr) 20px;
-    grid-template-rows: auto auto auto auto auto;
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
     grid-template-areas:
       ". link ."
       ". title ."
       "stage stage stage"
       ". note ."
       ". cam .";
-    height: auto;
-    min-height: 100svh;
-    padding: 24px 0 40px;
-    overflow: visible;
+    height: 100svh;
+    padding: 20px 0;
+    overflow: hidden;
   }
   .hero__link  { grid-area: link; }
   .hero__title {
     grid-area: title;
-    margin: 24px 0 0 -1px;
-    font-size: clamp(40px, 11vw, 56px);
+    margin: 16px 0 0 -1px;
+    font-size: clamp(36px, 10.5vw, 48px);
   }
   .hc-stage {
     position: static;
     left: auto;
     grid-area: stage;
     justify-self: stretch;
+    align-self: stretch;
     width: 100%;
     max-width: none;
-    height: auto;
-    aspect-ratio: 1 / 1;
-    margin-top: 24px;
-    object-position: center;
-    -webkit-mask-image: linear-gradient(to top, transparent 0%, black 24%);
-    mask-image: linear-gradient(to top, transparent 0%, black 24%);
+    height: 100%;
+    min-height: 0;
+    aspect-ratio: auto;
+    margin: 0;
+    object-position: center 42%; /* keep the face/hands in the band */
+    /* fade both edges of the band into the page background */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
   }
   .hero__note {
     grid-area: note;
-    margin: 8px 0 0 4px;
+    margin: 0 0 0 4px;
     width: auto;
+    /* 50-char lines fit a 375px phone at this size; keeps the note to 5 lines */
+    font-size: 10.5px;
+    line-height: 1.85;
   }
   .cam-frame,
   .hc-cam {
     grid-area: cam;
-    margin-top: 28px;
-    width: min(100%, var(--cam-w));
-    height: auto;
+    margin-top: 16px;
+    /* height-driven so it gives up room on short viewports; width follows 17:12 */
+    height: min(var(--cam-h), 32svh);
+    width: auto;
+    max-width: 100%;
     aspect-ratio: 17 / 12; /* 340×240 */
   }
 }

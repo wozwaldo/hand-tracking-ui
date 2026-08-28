@@ -18,11 +18,30 @@ const HandCrumple = () => {
         const SMOOTHING = 0.2;
         let smoothedScore = 0;
 
+        // Prime the crumple video. iOS/WebKit ignores `preload` and never fetches
+        // data or paints a frame for a <video> that hasn't been played, so
+        // `duration` stays NaN and the scrub never shows anything. A muted,
+        // inline play() is allowed without a gesture; pause on the first frame.
+        // (iOS Low Power Mode blocks even that — retry on the first tap.)
+        const stage = crumpleVideoRef.current;
+        const onFirstFrame = () => {
+            if (!stage) return;
+            stage.pause();
+            stage.currentTime = 0;
+        };
+        const primeOnGesture = () => { stage?.play().catch(() => {}); };
+        if (stage) {
+            stage.addEventListener("playing", onFirstFrame, { once: true });
+            stage.play().catch(() => {
+                window.addEventListener("pointerdown", primeOnGesture, { once: true });
+            });
+        }
+
         async function init () {
             if (!camRef.current || !canvasRef.current) return;
             
             // camera setup
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
             camRef.current.srcObject = stream;
 
             // wasm files addresses
@@ -111,7 +130,11 @@ const HandCrumple = () => {
         init().catch((err) => console.error("Camera access failed:", err));
 
         // cleanup
-        return () => cancelAnimationFrame(rafId);
+        return () => {
+            cancelAnimationFrame(rafId);
+            stage?.removeEventListener("playing", onFirstFrame);
+            window.removeEventListener("pointerdown", primeOnGesture);
+        };
     }, []);
 
     return (
