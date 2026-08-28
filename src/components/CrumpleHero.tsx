@@ -2,9 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import HandCrumple from "./HandCrumple";
 import "./CrumpleHero.css";
 
-// Fill these in — placeholders from the design handoff.
 const PORTFOLIO_URL = "https://berilbtn.vercel.app";
-const README_URL = "#";
+const README_URL = "https://github.com/wozwaldo/hand-tracking-ui/blob/main/README.md";
 
 type CameraState = "awaiting_permission" | "live";
 
@@ -41,7 +40,7 @@ const CrumpleHero = () => {
                 MediaPipe Hand Landmarker → 21 landmarks per frame<br />
                 Fist score: fingertip–palm distances, scale-normalized, EMA-smoothed<br />
                 Score scrubs an all-keyframe video via currentTime<br />
-                <a className="hero__readme" href={README_URL}>README.md ↗</a>
+                <a className="hero__readme" href={README_URL} target="_blank" rel="noopener noreferrer">README.md ↗</a>
             </p>
 
             {/* Webcam module chrome — overlays HandCrumple's .hc-cam box in the same grid area */}

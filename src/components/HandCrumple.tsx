@@ -44,8 +44,10 @@ const HandCrumple = () => {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
             camRef.current.srcObject = stream;
 
-            // wasm files addresses
-            const fileset = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm")
+            // wasm files addresses — pinned to the same version as the JS package in
+            // package.json; the WASM runtime and the library must match, and @latest
+            // would silently break the demo when a new major is published.
+            const fileset = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/wasm")
            
             // landmarker setup
             landmarker = await HandLandmarker.createFromOptions(fileset, {
