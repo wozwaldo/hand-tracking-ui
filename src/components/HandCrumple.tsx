@@ -76,13 +76,27 @@ const HandCrumple = () => {
             // request animation frame
             function loop () {
                 if (camRef.current && landmarker && ctx && canvasRef.current && camRef.current.readyState >= 2) {
-                    const result = landmarker.detectForVideo(
-                        camRef.current,
-                        performance.now()
-                    );
+                    const cam = camRef.current;
+                    const canvas = canvasRef.current;
 
-                    const w = canvasRef.current.width;
-                    const h = canvasRef.current.height;
+                    // Keep the canvas's intrinsic size equal to the stream's. Video and
+                    // canvas share one box with object-fit: cover, so they only line up
+                    // when their aspect ratios match — phone front cameras deliver a
+                    // portrait stream (e.g. 480×640), which a fixed 4:3 canvas would
+                    // draw skewed. Re-checked every frame to follow orientation changes.
+                    if (cam.videoWidth && (canvas.width !== cam.videoWidth || canvas.height !== cam.videoHeight)) {
+                        canvas.width = cam.videoWidth;
+                        canvas.height = cam.videoHeight;
+                        // let the layout (mobile) size the cam box to the same ratio
+                        document.documentElement.style.setProperty("--cam-ratio", `${cam.videoWidth} / ${cam.videoHeight}`);
+                    }
+
+                    const result = landmarker.detectForVideo(cam, performance.now());
+
+                    const w = canvas.width;
+                    const h = canvas.height;
+                    // stroke/dot/text scale with the frame (2px / 4px / 20px at 360px high)
+                    const unit = h / 360;
 
                     ctx.clearRect(0, 0, w, h); // her frame için canvas'ı temizle
 
@@ -91,7 +105,7 @@ const HandCrumple = () => {
 
                         // draw lines
                         ctx.strokeStyle = "#00ff88";
-                        ctx.lineWidth = 2;
+                        ctx.lineWidth = 2 * unit;
                         for (const conn of HandLandmarker.HAND_CONNECTIONS) {
                             const a = points[conn.start]; // start point
                             const b = points[conn.end]; // end point
@@ -105,16 +119,16 @@ const HandCrumple = () => {
                         ctx.fillStyle = "#ffffff";
                         for (const p of points){
                             ctx.beginPath();
-                            ctx.arc((1 - p.x) * w, p.y * h, 4, 0, Math.PI * 2);
+                            ctx.arc((1 - p.x) * w, p.y * h, 4 * unit, 0, Math.PI * 2);
                             ctx.fill();
                         }
 
                         const score = getFistScore(points);
                         smoothedScore = smoothedScore + (score - smoothedScore) * SMOOTHING;
-                        // canvas is 480×360 drawn into 340×240 (≈0.71×): 20px here ≈ 14px on screen
-                        ctx.font = "bold 20px 'IBM Plex Mono', monospace";
+                        // a 480×360 frame drawn into 340×240 (≈0.71×): 20px here ≈ 14px on screen
+                        ctx.font = `bold ${20 * unit}px 'IBM Plex Mono', monospace`;
                         ctx.fillStyle = "#ffffff";
-                        ctx.fillText(smoothedScore.toFixed(2), 14, 38);
+                        ctx.fillText(smoothedScore.toFixed(2), 14 * unit, 38 * unit);
 
                         const video = crumpleVideoRef.current;
                         if (video && Number.isFinite(video.duration)) {
@@ -147,11 +161,8 @@ const HandCrumple = () => {
                     muted
                     playsInline
                 />
-                <canvas 
-                    ref={canvasRef} 
-                    width={480}
-                    height={360}
-                />
+                {/* intrinsic size is set to the stream's dimensions once the camera is live */}
+                <canvas ref={canvasRef} width={480} height={360} />
             </div>
             <video
                 className="hc-stage"

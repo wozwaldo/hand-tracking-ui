@@ -190,8 +190,10 @@
 
 /* ------------------------------------------------------------------ */
 /* Mobile < 768: one screen, no scroll — link, title, stage, note, cam  */
-/* The stage (crumple video) takes whatever height is left over and    */
-/* crops to a horizontal band; the cam module shrinks on short phones. */
+/* The stage (crumple video) is the hero: it takes every pixel the      */
+/* other rows don't need. Title and cam module are deliberately small.  */
+/* The cam box follows the stream's aspect ratio (--cam-ratio, set by   */
+/* HandCrumple) so a portrait phone camera isn't cropped to a band.     */
 /* ------------------------------------------------------------------ */
 @media (max-width: 767px) {
   .hero {
@@ -204,14 +206,15 @@
       ". note ."
       ". cam .";
     height: 100svh;
-    padding: 20px 0;
+    padding: 16px 0;
     overflow: hidden;
   }
   .hero__link  { grid-area: link; }
   .hero__title {
     grid-area: title;
-    margin: 16px 0 0 -1px;
-    font-size: clamp(36px, 10.5vw, 48px);
+    margin: 10px 0 0 -1px;
+    font-size: clamp(24px, 7vw, 30px);
+    letter-spacing: -0.5px;
   }
   .hc-stage {
     position: static;
@@ -224,11 +227,11 @@
     height: 100%;
     min-height: 0;
     aspect-ratio: auto;
-    margin: 0;
+    margin: 8px 0 0;
     object-position: center 42%; /* keep the face/hands in the band */
-    /* fade both edges of the band into the page background */
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
-    mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
+    /* soft edges only — the video should read as the hero, not a strip */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
   }
   .hero__note {
     grid-area: note;
@@ -241,11 +244,11 @@
   .cam-frame,
   .hc-cam {
     grid-area: cam;
-    margin-top: 16px;
-    /* height-driven so it gives up room on short viewports; width follows 17:12 */
-    height: min(var(--cam-h), 32svh);
+    margin-top: 12px;
+    /* small, height-driven; width follows the live stream's ratio (portrait on phones) */
+    height: min(160px, 20svh);
     width: auto;
     max-width: 100%;
-    aspect-ratio: 17 / 12; /* 340×240 */
+    aspect-ratio: var(--cam-ratio, 3 / 4);
   }
 }
